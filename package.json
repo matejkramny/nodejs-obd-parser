@@ -9,6 +9,8 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
+    "cli-table": "^0.3.1",
+    "logtrail": "0.0.2",
     "serialport": "^1.4.6"
   }
 }

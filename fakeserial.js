@@ -2,6 +2,11 @@
 var util = require('util'),
 	EventEmitter = require('events').EventEmitter;
 
+var commands = [];
+require('fs').readdirSync(__dirname + '/commands').forEach(function (e) {
+	commands.push(require('./commands/' + e));
+});
+
 var FakeSerial = function () {
 	var self = this;
 
@@ -39,23 +44,43 @@ FakeSerial.prototype.write = function(data) {
 
 	if (this.modes.E) {
 		// echo
-		process.nextTick(function () {
-			self.emit('data', data);
-		});
+		this.writeNext(data);
 	}
 
 	if (data == "AT E0") {
-		process.nextTick(function () {
-			self.emit('data', data);
-		});
+		this.writeNext(data);
 
 		return;
 	}
 
 	if (data == "0100" || data == "0120" || data == "0140" || data == "0160") {
-		this.findSupportedPins(data);
+		return this.findSupportedPins(data);
 	}
-};
+
+	if (data.substring(0, 2) != "01") {
+		return this.writeNext('?');
+	}
+
+	var cmd = data.substring(2, 4);
+	for (var i = 0; i < commands.length; i++) {
+		if (commands[i].id == cmd) {
+			var res = commands[i].fakeResponse(data).toString(16);
+			if (res.length % 2 == 1) {
+				res = '0' + res;
+			}
+
+			return this.writeNext('41 ' + cmd + ' ' + res);
+		}
+	}
+}
+
+FakeSerial.prototype.writeNext = function (data) {
+	var self = this;
+
+	process.nextTick(function () {
+		self.emit('data', data);
+	});
+}
 
 FakeSerial.prototype.findSupportedPins = function (data) {
 	var self = this;
@@ -76,6 +101,15 @@ FakeSerial.prototype.findSupportedPins = function (data) {
 
 	if (data == "0100") {
 		pins[1][3] = 1;
+		pins[1][4] = 1;
+		pins[1][5] = 1;
+		pins[1][6] = 1;
+	}
+	if (data == "0120") {
+		pins[0][1] = 1;
+	}
+	if (data == "0140" || data == "0160" || data == "0180") {
+		return this.writeNext('NO DATA');
 	}
 
 	var bytes = [];
@@ -91,18 +125,16 @@ FakeSerial.prototype.findSupportedPins = function (data) {
 		bytes.push(byte);
 	}
 
-	process.nextTick(function () {
-		var byteString = [];
+	var byteString = ['>41', data.substring(2, 4)];
 
-		for (var i = 0; i < bytes.length; i++) {
-			var s = bytes[i].toString(16);
-			if (s.length == 1) {
-				s = '0'+s;
-			}
-
-			byteString.push(s);
+	for (var i = 0; i < bytes.length; i++) {
+		var s = bytes[i].toString(16);
+		if (s.length == 1) {
+			s = '0'+s;
 		}
 
-		self.emit('data', byteString.join(' '));
-	});
+		byteString.push(s);
+	}
+
+	this.writeNext(byteString.join(' '));
 }
