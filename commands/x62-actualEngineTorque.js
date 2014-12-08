@@ -1,6 +1,7 @@
 
 module.exports = {
-	name: 'Actual Engine Torque (%)',
+	name: 'Actual Engine Torque',
+	unit: '%',
 	id: '62',
 	formula: function (res) {
 		return res - 125

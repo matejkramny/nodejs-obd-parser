@@ -1,6 +1,7 @@
 
 module.exports = {
-	name: 'Absolute Load Value (%)',
+	name: 'Absolute Load Value',
+	unit: '%',
 	id: '43',
 	formula: function (res) {
 		return res * 100 / 255

@@ -1,6 +1,7 @@
 
 module.exports = {
-	name: 'Engine Reference Torque (Nm)',
+	name: 'Engine Reference Torque',
+	unit: 'Nm',
 	id: '63',
 	formula: function (res) {
 		return res

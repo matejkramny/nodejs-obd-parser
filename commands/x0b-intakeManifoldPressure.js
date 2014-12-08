@@ -1,6 +1,7 @@
 
 module.exports = {
-	name: 'Intake manifold absolute pressure (kPa)',
+	name: 'Intake Manifold abs. Pressure',
+	unit: 'kPa',
 	id: '0B',
 	formula: function (res) {
 		return res

@@ -1,25 +1,32 @@
 
 var util = require('util'),
 	fs = require('fs'),
-	Table = require('cli-table');
+	Table = require('cli-table'),
+	logtrail = require('logtrail'),
+	events = require('events');
+
+exports.bus = new events.EventEmitter();
+
+var kCommandDelay = 200;
 
 var serialport = require("serialport");
-var port = new serialport.SerialPort("/dev/ttyUSB0", {
-	baudRate: 38400,
-	parser: serialport.parsers.readline("\r")
-});
 
-// var port = new (require('./fakeserial'))();
+var port = new (require('./fakeserial'))();
 
-var logtrail = require('logtrail');
+// var port = new serialport.SerialPort("/dev/ttyUSB0", {
+	// baudRate: 38400,
+	// parser: serialport.parsers.readline("\r")
+// });
+
 logtrail.configure({
-	loglevel: 'error'
-})
+	// loglevel: 'error'
+});
 console.log = logtrail.log.bind(logtrail);
 
 var initSequence = [
-	"AT E1",
+	"AT WS",
 	"AT L0",
+	"AT M0",
 	"AT I",
 	"AT @1",
 	"AT DP",
@@ -115,7 +122,7 @@ function mainDataLoop (data) {
 		}
 
 		var command = commands[currentCommand];
-		var calculated = command.formula(res);
+		var calculated = command.formula(res).toFixed(2);
 
 		var lastCalculated = command.lastCalculated;
 		if (!lastCalculated) lastCalculated = Date.now();
@@ -123,7 +130,8 @@ function mainDataLoop (data) {
 		var diff = command.lastCalculated - lastCalculated;
 
 		var row = {};
-		row[commands[currentCommand].name] = [command.id, calculated, diff];
+		row[commands[currentCommand].name] = [command.id, calculated, commands[currentCommand].unit, diff];
+		exports.bus.emit('data', row);
 
 		console.log('adding', util.inspect(row));
 		commandTable.push(row);
@@ -147,10 +155,10 @@ function writeNext () {
 
 	if (currentCommand >= commands.length) {
 		currentCommand = -1;
-		process.stdout.write("\x1b[2J\x1b[H" + commandTable.toString());
+		// process.stdout.write("\x1b[2J\x1b[H" + commandTable.toString() + "\n");
 		commandTable.splice(0, commandTable.length); //empty
 
-		setTimeout(writeNext, 100);
+		setTimeout(writeNext, kCommandDelay);
 
 		return;
 	}
@@ -207,13 +215,6 @@ function parseSupportCmd (data, sequence) {
 				supportedPins.push(pin);
 			}
 		}
-
-		// for (var b = 0; b < 8; b++) {
-			// if (byte & (1 << b)) {
-				// supportedPins.push(pin);
-			// }
-			// pin++;
-		// }
 	}
 
 	for (var i = 0; i < availableCommands.length; i++) {
@@ -250,13 +251,14 @@ function skipNextSupportCmd () {
 
 	if (supportCmdSeq.length == 0) {
 		commandTable = new Table({
-			head: ['', 'Value']
-		})
+			head: ['', 'ID', 'CMD Value', 'Unit', 'Δ (ms)']
+		});
 
 		isInit = 2;
 
-		console.log(util.inspect(commands));
-		console.log("Done.")
+		logtrail.trace(util.inspect(commands));
+		logtrail.trace("Done.")
+
 		writeNext();
 		return;
 	}

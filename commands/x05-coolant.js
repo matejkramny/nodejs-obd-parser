@@ -1,6 +1,7 @@
 
 module.exports = {
-	name: 'Coolant Temperature (C)',
+	name: 'Coolant Temperature',
+	unit: 'C',
 	id: '05',
 	formula: function (res) {
 		return res - 40

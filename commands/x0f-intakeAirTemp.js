@@ -1,6 +1,7 @@
 
 module.exports = {
-	name: 'Intake Air Temperature (C)',
+	name: 'Intake Air Temperature',
+	unit: 'C',
 	id: '0F',
 	formula: function (res) {
 		return res - 40

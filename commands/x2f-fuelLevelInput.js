@@ -1,6 +1,7 @@
 
 module.exports = {
-	name: 'Fuel Level Input (%)',
+	name: 'Fuel Level Input',
+	unit: '%',
 	id: '2F',
 	formula: function (res) {
 		return res * 100 / 255

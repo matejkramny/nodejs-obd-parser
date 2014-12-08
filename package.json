@@ -2,7 +2,7 @@
   "name": "obd-analytics",
   "version": "1.0.0",
   "description": "",
-  "main": "index.js",
+  "main": "index.html",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
   },
@@ -12,5 +12,9 @@
     "cli-table": "^0.3.1",
     "logtrail": "0.0.2",
     "serialport": "^1.4.6"
+  },
+  "window": {
+    "frame": true,
+    "toolbar": true
   }
 }

@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html ng-app="obd">
+<head>
+	<title>Hello World!</title>
+	<link href="bower_components/bootstrap/dist/css/bootstrap.css" rel="stylesheet">
+	<link href="bower_components/bootstrap/dist/css/bootstrap-theme.css" rel="stylesheet">
+	<script src="bower_components/angular/angular.min.js"></script>
+</head>
+
+<body>
+	<h1>Hello World!</h1>
+
+	We are using node.js <script>document.write(process.version)</script>. 1 + 2 = {{ 1 + 2}}.
+
+	<table class="table" ng-controller="DataCtrl">
+		<thead>
+			<th></th>
+			<th>ID</th>
+			<th>Value</th>
+			<th>Unit</th>
+			<th>&Delta; (ms)</th>
+		</thead>
+		<tbody>
+			<tr ng-repeat="row in data">
+				<td>{{ row[0] }}</td>
+				<td>{{ row[1] }}</td>
+				<td>{{ row[2] }}</td>
+				<td>{{ row[3] }}</td>
+				<td>{{ row[4] }}</td>
+			</tr>
+		</tbody>
+	</table>
+
+	<script>
+
+var server = require('./server.js');
+var app = angular.module('obd', []);
+app.controller('DataCtrl', function ($scope) {
+	$scope.data = [];
+
+	server.bus.on('data', function (d) {
+		console.log(d);
+		var rows = [];
+		for (dat in d) {
+			var row = [];
+			row.push(dat);
+
+			for (var i = 0; i < d[dat].length; i++) {
+				row.push(d[dat][i]);
+			}
+
+			rows.push(row);
+		}
+		console.log(rows);
+
+		$scope.data = rows;
+
+		if (!$scope.$$phase) {
+			$scope.$digest();
+		}
+	});
+});
+
+	</script>
+</body>
+</html>
